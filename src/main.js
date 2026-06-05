@@ -457,9 +457,26 @@ function bindEventListeners() {
  * Configure AdSense IDs at runtime based on CONFIG
  */
 function setupAdSensePublisher() {
+  const client = CONFIG.adsenseClientId;
+  // Bypasses placeholder or unconfigured publisher IDs
+  if (!client || client === 'ca-pub-placeholder' || client.includes('1234567890')) return;
+
+  // 1. Inject the Google AdSense Script Tag
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`;
+  script.crossOrigin = "anonymous";
+  document.head.appendChild(script);
+
+  // 2. Configure and Push Ad Slots
   const adElements = document.querySelectorAll('ins.adsbygoogle');
   adElements.forEach(ins => {
-    ins.setAttribute('data-ad-client', CONFIG.adsenseClientId);
+    ins.setAttribute('data-ad-client', client);
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (error) {
+      console.warn("AdSense push initialization error:", error);
+    }
   });
 }
 
