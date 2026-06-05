@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>100% Offline Image Resizer & Compressor - Compress to 20KB, 50KB, 100KB</title>
+    <meta name="description" content="Resize and compress JPEG, PNG, HEIC, and WebP images to exact KB thresholds (50KB, 20KB) locally. Zero server uploads. 100% private." />
+    
+    <!-- Open Graph SEO Metadata -->
+    <meta property="og:title" content="100% Offline Image Resizer & Compressor" />
+    <meta property="og:description" content="Resize and compress JPEG, PNG, HEIC, and WebP images to exact KB thresholds locally. Zero server uploads. 100% private." />
+    <meta property="og:type" content="website" />
+    
+    <!-- Google Fonts Preload -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338BDF8'%3E%3Cpath d='M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22ZM11 7H13V9H11V7ZM11 11H13V17H11V11Z'/%3E%3C/svg%3E" />
+  </head>
+  <body class="font-sans antialiased relative min-h-screen pb-12">
+    <!-- Ambient glowing backgrounds -->
+    <div class="radial-glow top-0 left-0"></div>
+    <div class="radial-glow bottom-0 right-0"></div>
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      
+      <!-- Top Header / Brand Console -->
+      <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-4 mb-8 gap-4">
+        <div>
+          <div class="flex items-center gap-3">
+            <span id="preset-badge" class="px-2.5 py-1 text-xs font-semibold rounded-full bg-cyan-500/10 text-cyan-primary border border-cyan-500/20 transition-all duration-300">
+              Standard
+            </span>
+            <span class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-success-green border border-emerald-500/20">
+              <!-- Inline lock icon -->
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0110 0v4"></path>
+              </svg>
+              100% Offline Client RAM
+            </span>
+          </div>
+          <h1 id="main-h1" class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2 text-slate-100">
+            Local-First Image Resizer & Compressor
+          </h1>
+        </div>
+        
+        <!-- Navigation Links for SEO crawling -->
+        <nav class="flex flex-wrap gap-4 text-sm text-slate-400">
+          <a id="link-root" href="/" class="hover:text-cyan-primary transition-colors duration-200">Home</a>
+          <span class="text-white/10">|</span>
+          <a id="link-ssc" href="/compress-photo-to-exactly-50kb-ssc" class="hover:text-cyan-primary transition-colors duration-200">SSC Photo Preset (50KB)</a>
+          <span class="text-white/10">|</span>
+          <a id="link-upsc" href="/resize-signature-under-20kb-upsc" class="hover:text-cyan-primary transition-colors duration-200">UPSC Signature Preset (20KB)</a>
+        </nav>
+      </header>
+
+      <!-- Glassmorphic Bento Grid (Desktop: 12-cols, Tablet: 2-cols, Mobile: 1-col) -->
+      <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- ================= LEFT COLUMN: System Info & Presets [col-span-3] ================= -->
+        <section class="lg:col-span-3 space-y-6">
+          
+          <!-- Presets panel -->
+          <div class="bento-glass-panel p-5">
+            <h2 class="text-base font-bold text-slate-100 mb-4 flex items-center gap-2">
+              Presets
+            </h2>
+            <div class="space-y-3">
+              <button id="preset-ssc" class="w-full h-12 flex items-center justify-between px-4 border border-white/5 bg-white/2 rounded-xl text-slate-400 hover:border-white/10 transition-all active:scale-95 text-left text-sm font-medium">
+                <span>SSC Photo</span>
+                <span class="text-xs bg-slate-800 px-2 py-0.5 rounded font-mono text-cyan-primary">50KB JPEG</span>
+              </button>
+              <button id="preset-upsc" class="w-full h-12 flex items-center justify-between px-4 border border-white/5 bg-white/2 rounded-xl text-slate-400 hover:border-white/10 transition-all active:scale-95 text-left text-sm font-medium">
+                <span>UPSC Signature</span>
+                <span class="text-xs bg-slate-800 px-2 py-0.5 rounded font-mono text-cyan-primary">20KB JPEG</span>
+              </button>
+              <button id="preset-custom" class="w-full h-12 flex items-center justify-between px-4 border border-cyan-primary/50 bg-cyan-500/10 rounded-xl text-cyan-primary hover:border-white/10 transition-all active:scale-95 text-left text-sm font-medium">
+                <span>Custom Target</span>
+                <span class="text-xs bg-slate-800 px-2 py-0.5 rounded font-mono text-slate-400">Manual</span>
+              </button>
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-white/5 text-xs text-slate-400 space-y-2">
+              <p>📍 Presets auto-configure target file sizes and formats to match recruitment portals constraints.</p>
+            </div>
+          </div>
+
+          <!-- Trust & Security Console -->
+          <div class="bento-glass-panel p-5">
+            <h2 class="text-base font-bold text-slate-100 mb-4 flex items-center gap-2">
+              Local Privacy Guarantee
+            </h2>
+            <div class="space-y-3 text-xs leading-relaxed text-slate-400">
+              <p>🔒 <strong>Zero Server Contact:</strong> Image operations compile dynamically inside standard browser RAM memory. No network connections are initiated.</p>
+              <p>⚡ <strong>TTI Performance:</strong> Render operations execute locally under 400ms for instant responses.</p>
+              <p>✈️ <strong>Works Offline:</strong> Service workers cache site dependencies so it works completely without internet access.</p>
+            </div>
+          </div>
+
+          <!-- Left Bento Ad Slot -->
+          <div class="bento-glass-panel p-4 flex flex-col items-center justify-center min-h-[250px] border border-dashed border-white/5 relative overflow-hidden">
+            <span class="absolute top-2 left-2 text-[10px] uppercase font-mono tracking-widest text-white/20">Sponsored</span>
+            <div class="text-center p-2">
+              <!-- Google AdSense Placeholder Slot -->
+              <ins class="adsbygoogle"
+                   style="display:block; width:250px; height:250px;"
+                   data-ad-client="ca-pub-placeholder"
+                   data-ad-slot="1234567890"></ins>
+              <div class="text-slate-500 text-xs mt-2 font-mono">Ad slot - 250 × 250</div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ================= CENTER COLUMN: Interactive Work Arena [col-span-6] ================= -->
+        <section class="sm:col-span-2 lg:col-span-6 space-y-6">
+          
+          <!-- Main workspace -->
+          <div class="bento-glass-panel p-6 relative min-h-[460px] flex flex-col justify-between">
+            
+            <!-- Upload Landing Deck -->
+            <div id="workspace-landing" class="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-white/10 hover:border-cyan-primary/40 rounded-2xl p-8 cursor-pointer transition-all duration-300 group" style="min-height: 380px;">
+              <input type="file" id="file-input" class="hidden" accept="image/jpeg,image/png,image/webp,.heic,.heif" />
+              
+              <!-- Upload SVG Icon -->
+              <div class="w-16 h-16 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-400 group-hover:text-cyan-primary group-hover:bg-cyan-500/10 transition-all duration-300 mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path>
+                </svg>
+              </div>
+              
+              <h3 class="text-lg font-bold text-slate-200 mb-1 group-hover:text-white transition-colors">Drag and drop your image</h3>
+              <p class="text-xs text-slate-500 mb-4">Supports JPEG, PNG, WebP or HEIC from iPhone</p>
+              
+              <button id="browse-btn" class="h-11 px-6 rounded-xl border border-white/10 bg-white/5 text-sm font-semibold text-slate-200 hover:bg-white/10 hover:border-white/20 transition-all active:scale-95">
+                Select File
+              </button>
+            </div>
+
+            <!-- Preview Workspace (Hidden initially) -->
+            <div id="workspace-preview" class="hidden flex-1 flex flex-col justify-between space-y-6">
+              <!-- Canvas Display wrapper -->
+              <div class="relative w-full rounded-2xl overflow-hidden canvas-checkerboard border border-white/5 flex items-center justify-center p-4" style="min-height: 300px; max-height: 420px;">
+                <canvas id="preview-canvas" class="max-w-full max-h-[350px] object-contain rounded shadow-2xl"></canvas>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="flex flex-col sm:flex-row gap-3">
+                <button id="download-btn" class="flex-1 h-12 gradient-action-btn flex items-center justify-center gap-2 text-sm font-bold active:scale-95">
+                  <!-- Download Icon -->
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
+                  </svg>
+                  Download Compressed Image
+                </button>
+                <button id="reset-btn" class="h-12 px-6 rounded-xl border border-white/5 bg-white/2 text-sm font-semibold text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2">
+                  <!-- Reset / Trash Icon -->
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"></path>
+                  </svg>
+                  Clear File
+                </button>
+              </div>
+            </div>
+
+            <!-- Loader Overlay (Absolute) -->
+            <div id="loading-overlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md rounded-2xl hidden flex-col items-center justify-center space-y-4 z-50">
+              <!-- Premium Frosted Spinner -->
+              <div class="relative w-16 h-16 flex items-center justify-center">
+                <div class="w-12 h-12 border-3 border-cyan-primary/20 border-t-cyan-primary rounded-full animate-spin"></div>
+              </div>
+              <p id="loading-status-text" class="text-sm font-semibold text-slate-300 font-mono">Processing...</p>
+            </div>
+
+          </div>
+
+          <!-- Bottom Ad Slot for Mobile / Tablet Viewports -->
+          <div class="bento-glass-panel p-4 flex flex-col items-center justify-center border border-dashed border-white/5 relative overflow-hidden lg:hidden min-h-[90px]">
+            <span class="absolute top-1 left-2 text-[8px] uppercase font-mono tracking-widest text-white/20">Sponsored</span>
+            <!-- Mobile Leaderboard banner placement -->
+            <ins class="adsbygoogle"
+                 style="display:inline-block;width:320px;height:50px"
+                 data-ad-client="ca-pub-placeholder"
+                 data-ad-slot="9876543210"></ins>
+            <div class="text-slate-600 text-[9px] font-mono mt-1">Responsive Mobile Banner - 320 × 50</div>
+          </div>
+
+        </section>
+
+        <!-- ================= RIGHT COLUMN: Parameters & Telemetry [col-span-3] ================= -->
+        <section class="lg:col-span-3 space-y-6">
+          
+          <!-- Parameters Console -->
+          <div class="bento-glass-panel p-5 space-y-5">
+            <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              Compression Settings
+            </h2>
+            
+            <!-- Output Format Selection -->
+            <div class="space-y-2">
+              <label for="format-select" class="text-xs font-semibold text-slate-400 block uppercase tracking-wider">Output Format</label>
+              <select id="format-select" class="w-full h-11 px-3 border border-white/5 bg-slate-800/50 rounded-xl text-slate-200 text-sm focus:border-cyan-primary transition-all">
+                <option value="image/jpeg">JPEG (.jpg)</option>
+                <option value="image/png">PNG (.png)</option>
+              </select>
+            </div>
+
+            <!-- Target Size threshold slider & inputs -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label for="target-kb-input" class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Target Max Size</label>
+                <div class="flex items-center gap-1 bg-slate-800/80 px-2 py-0.5 rounded border border-white/5">
+                  <input type="number" id="target-kb-input" min="5" max="2000" value="50" class="w-12 bg-transparent text-right font-mono text-sm text-cyan-primary focus:outline-none focus:ring-0" />
+                  <span class="text-xs font-mono text-slate-500">KB</span>
+                </div>
+              </div>
+              
+              <input type="range" id="target-kb-slider" min="5" max="500" value="50" step="5" class="w-full accent-cyan-primary cursor-pointer" />
+              <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                <span>5 KB</span>
+                <span>250 KB</span>
+                <span>500 KB</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Metrics Telemetry (frosted panel) -->
+          <div class="bento-glass-panel p-5">
+            <h2 class="text-base font-bold text-slate-100 mb-4">
+              Image Telemetry
+            </h2>
+            
+            <div class="space-y-4">
+              <!-- Comparison layout -->
+              <div class="grid grid-cols-2 gap-4 pb-4 border-b border-white/5 text-xs">
+                <div>
+                  <span class="text-slate-500 block mb-1">Original Size</span>
+                  <span id="orig-size" class="font-mono text-slate-300">-</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block mb-1">Compressed Size</span>
+                  <span id="comp-size" class="font-mono text-success-green font-bold">-</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 pb-4 border-b border-white/5 text-xs">
+                <div>
+                  <span class="text-slate-500 block mb-1">Original Dims</span>
+                  <span id="orig-dims" class="font-mono text-slate-300">-</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block mb-1">Compressed Dims</span>
+                  <span id="comp-dims" class="font-mono text-slate-300">-</span>
+                </div>
+              </div>
+
+              <!-- Efficiency summary -->
+              <div class="space-y-3 text-xs pt-1">
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-500">Target Efficiency</span>
+                  <span id="comp-ratio" class="font-mono bg-cyan-500/10 text-cyan-primary px-1.5 py-0.5 rounded font-bold">-</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-500">Quality Tuning</span>
+                  <span id="comp-quality" class="font-mono text-slate-300">-</span>
+                </div>
+                <div class="text-[10px] text-slate-500 border-t border-white/5 pt-2 font-mono break-all leading-tight">
+                  <span class="text-slate-400 block mb-1">File Name:</span>
+                  <span id="orig-name">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+
+      <!-- Page Footer -->
+      <footer class="mt-12 text-center text-xs text-slate-600 border-t border-white/5 pt-6 leading-relaxed">
+        <p>© 2026 SnapForm Local-First Utility Hub. All processes occur locally inside client volatile RAM.</p>
+        <p class="mt-1">Zero Cloud Storage. Zero Identity Leaks. Secure, Offline Sandbox environment.</p>
+      </footer>
+    </div>
+
+    <!-- Script loading -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
