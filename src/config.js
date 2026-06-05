@@ -3,7 +3,7 @@
  */
 export const CONFIG = {
   // Replace this with your official Google AdSense Client ID in production
-  adsenseClientId: 'ca-pub-1234567890123456',
+  adsenseClientId: 'ca-pub-4952058159604557',
   
   // Default values
   defaultTargetKb: 50,
