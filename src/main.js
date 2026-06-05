@@ -1,10 +1,10 @@
 /**
  * Main Application Bootstrap
- * Binds UI listeners, implements client-side state machine, and registers Service Worker.
+ * Coordinates state in RAM, routing presets, custom dimensions, cropper, and AdSense.
  */
 
 import './style.css';
-import { initRouter, navigateTo, ROUTE_PRESETS } from './modules/router.js';
+import { initRouter, navigateTo } from './modules/router.js';
 import { 
   cacheDOMElements, 
   updateTargetKbUI, 
@@ -18,10 +18,12 @@ import {
 } from './modules/ui.js';
 import { processIncomingFile } from './modules/fileHandler.js';
 import { processClientImage, loadImage } from './modules/compressor.js';
+import { CONFIG } from './config.js';
 
 // Central state tracking in Volatile RAM
 const state = {
-  originalFile: null,
+  originalFile: null,   // Sanitized user file
+  croppedFile: null,    // Crop result file if cropped
   originalMetadata: {
     width: 0,
     height: 0
@@ -29,29 +31,70 @@ const state = {
   compressedBlob: null,
   targetMaxKB: 50,
   outputFormat: 'image/jpeg',
+  targetWidth: null,    // Custom width override
+  targetHeight: null,   // Custom height override
+  aspectRatioLocked: true,
   isProcessing: false,
   activePreset: 'custom' // 'ssc' | 'upsc' | 'custom'
 };
+
+// Cached elements reference local to main
+let pageElements = {};
+
+/**
+ * Custom cache DOM elements specific to main.js settings inputs
+ */
+function cacheLocalElements() {
+  pageElements = {
+    customWidth: document.getElementById('custom-width'),
+    customHeight: document.getElementById('custom-height'),
+    aspectLock: document.getElementById('aspect-lock'),
+    cropTriggerBtn: document.getElementById('crop-trigger-btn'),
+    fileInput: document.getElementById('file-input'),
+    browseBtn: document.getElementById('browse-btn'),
+    dropZone: document.getElementById('drop-zone'),
+    targetKbSlider: document.getElementById('target-kb-slider'),
+    targetKbInput: document.getElementById('target-kb-input'),
+    formatSelect: document.getElementById('format-select'),
+    presetSsc: document.getElementById('preset-ssc'),
+    presetUpsc: document.getElementById('preset-upsc'),
+    presetCustom: document.getElementById('preset-custom'),
+    downloadBtn: document.getElementById('download-btn'),
+    resetBtn: document.getElementById('reset-btn'),
+    linkNeet: document.getElementById('link-neet'),
+    linkGate: document.getElementById('link-gate'),
+    linkSbi: document.getElementById('link-sbi')
+  };
+}
 
 /**
  * Triggers client-side canvas quality and size scaling solver.
  */
 async function triggerCompression() {
-  if (!state.originalFile) return;
+  // Use cropped file if available, otherwise original
+  const activeFile = state.croppedFile || state.originalFile;
+  if (!activeFile) return;
   if (state.isProcessing) return;
 
   state.isProcessing = true;
   toggleLoading(true, "Executing local iterative compression...");
 
   try {
-    const result = await processClientImage(state.originalFile, state.targetMaxKB, state.outputFormat);
+    const result = await processClientImage(
+      activeFile, 
+      state.targetMaxKB, 
+      state.outputFormat,
+      state.targetWidth,
+      state.targetHeight
+    );
+    
     state.compressedBlob = result.blob;
 
     // Render telemetry calculations
     renderImageTelemetry(
       {
-        name: state.originalFile.name,
-        size: state.originalFile.size,
+        name: activeFile.name,
+        size: activeFile.size,
         width: state.originalMetadata.width,
         height: state.originalMetadata.height
       },
@@ -84,6 +127,9 @@ async function loadFileIntoWorkspace(file) {
   try {
     toggleLoading(true, "Sanitizing file structures...");
     
+    // Clear previous crop states
+    state.croppedFile = null;
+
     // Process formats, converts HEIC to standard JPG
     const sanitizedFile = await processIncomingFile(file, (msg) => {
       toggleLoading(true, msg);
@@ -98,6 +144,9 @@ async function loadFileIntoWorkspace(file) {
       height: img.naturalHeight
     };
 
+    // Auto-fill custom dimensions inputs if presets don't specify them
+    updateDimensionInputsUI();
+
     toggleLoading(false);
     
     // Trigger compression immediately
@@ -111,42 +160,48 @@ async function loadFileIntoWorkspace(file) {
 }
 
 /**
- * Initialize event listeners
+ * Updates the Width and Height input elements in the UI
+ */
+function updateDimensionInputsUI() {
+  if (!pageElements.customWidth || !pageElements.customHeight) return;
+
+  if (state.targetWidth) {
+    pageElements.customWidth.value = state.targetWidth;
+  } else {
+    pageElements.customWidth.value = '';
+    pageElements.customWidth.placeholder = state.originalFile ? state.originalMetadata.width : 'Original';
+  }
+
+  if (state.targetHeight) {
+    pageElements.customHeight.value = state.targetHeight;
+  } else {
+    pageElements.customHeight.value = '';
+    pageElements.customHeight.placeholder = state.originalFile ? state.originalMetadata.height : 'Original';
+  }
+}
+
+/**
+ * Initialize all event listeners
  */
 function bindEventListeners() {
-  const fileInput = document.getElementById('file-input');
-  const browseBtn = document.getElementById('browse-btn');
-  const dropZone = document.getElementById('drop-zone');
-  
-  const targetKbSlider = document.getElementById('target-kb-slider');
-  const targetKbInput = document.getElementById('target-kb-input');
-  const formatSelect = document.getElementById('format-select');
-  
-  const presetSsc = document.getElementById('preset-ssc');
-  const presetUpsc = document.getElementById('preset-upsc');
-  const presetCustom = document.getElementById('preset-custom');
-  
-  const downloadBtn = document.getElementById('download-btn');
-  const resetBtn = document.getElementById('reset-btn');
-
   // Trigger file picker click
-  if (browseBtn && fileInput) {
-    browseBtn.addEventListener('click', (e) => {
+  if (pageElements.browseBtn && pageElements.fileInput) {
+    pageElements.browseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      fileInput.click();
+      pageElements.fileInput.click();
     });
   }
 
   // Click on dropzone itself triggers picker
-  if (dropZone && fileInput) {
-    dropZone.addEventListener('click', () => {
-      fileInput.click();
+  if (pageElements.dropZone && pageElements.fileInput) {
+    pageElements.dropZone.addEventListener('click', () => {
+      pageElements.fileInput.click();
     });
   }
 
   // Picker selection changed
-  if (fileInput) {
-    fileInput.addEventListener('change', (e) => {
+  if (pageElements.fileInput) {
+    pageElements.fileInput.addEventListener('change', (e) => {
       if (e.target.files && e.target.files.length > 0) {
         loadFileIntoWorkspace(e.target.files[0]);
       }
@@ -154,9 +209,9 @@ function bindEventListeners() {
   }
 
   // Drag and drop events
-  if (dropZone) {
+  if (pageElements.dropZone) {
     ['dragenter', 'dragover'].forEach(eventName => {
-      dropZone.addEventListener(eventName, (e) => {
+      pageElements.dropZone.addEventListener(eventName, (e) => {
         e.preventDefault();
         e.stopPropagation();
         toggleDropZoneHighlight(true);
@@ -164,14 +219,14 @@ function bindEventListeners() {
     });
 
     ['dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, (e) => {
+      pageElements.dropZone.addEventListener(eventName, (e) => {
         e.preventDefault();
         e.stopPropagation();
         toggleDropZoneHighlight(false);
       }, false);
     });
 
-    dropZone.addEventListener('drop', (e) => {
+    pageElements.dropZone.addEventListener('drop', (e) => {
       const dt = e.dataTransfer;
       if (dt && dt.files && dt.files.length > 0) {
         loadFileIntoWorkspace(dt.files[0]);
@@ -180,8 +235,8 @@ function bindEventListeners() {
   }
 
   // Configurations bindings: Slider and Number Input Sync
-  if (targetKbSlider && targetKbInput) {
-    targetKbSlider.addEventListener('input', (e) => {
+  if (pageElements.targetKbSlider && pageElements.targetKbInput) {
+    pageElements.targetKbSlider.addEventListener('input', (e) => {
       state.targetMaxKB = parseInt(e.target.value, 10);
       updateTargetKbUI(state.targetMaxKB);
       state.activePreset = 'custom';
@@ -189,7 +244,7 @@ function bindEventListeners() {
       triggerCompression();
     });
 
-    targetKbInput.addEventListener('change', (e) => {
+    pageElements.targetKbInput.addEventListener('change', (e) => {
       let val = parseInt(e.target.value, 10);
       if (isNaN(val)) val = 50;
       val = Math.max(5, Math.min(2000, val)); // Clamp values
@@ -202,54 +257,172 @@ function bindEventListeners() {
   }
 
   // Format selection changes
-  if (formatSelect) {
-    formatSelect.addEventListener('change', (e) => {
+  if (pageElements.formatSelect) {
+    pageElements.formatSelect.addEventListener('change', (e) => {
       state.outputFormat = e.target.value;
       triggerCompression();
     });
   }
 
+  // Crop Trigger Modal
+  if (pageElements.cropTriggerBtn) {
+    pageElements.cropTriggerBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const activeFile = state.originalFile;
+      if (!activeFile) return;
+
+      try {
+        toggleLoading(true, "Loading crop interface...");
+        
+        // Lazy load cropping module
+        const { openCropModal } = await import('./modules/cropper.js');
+        toggleLoading(false);
+
+        // Determine default aspect ratio based on presets
+        let defaultAspect = NaN;
+        const path = window.location.pathname;
+        if (path.includes('ssc') || path.includes('sbi') || path.includes('gate')) {
+          defaultAspect = 350 / 450;
+        } else if (path.includes('upsc') || path.includes('neet')) {
+          defaultAspect = 350 / 110;
+        } else if (state.targetWidth && state.targetHeight) {
+          defaultAspect = state.targetWidth / state.targetHeight;
+        }
+
+        // Open Modal
+        openCropModal(activeFile, async (croppedFile) => {
+          state.croppedFile = croppedFile;
+          
+          toggleLoading(true, "Analyzing cropped structure...");
+          const img = await loadImage(croppedFile);
+          
+          // Sync cropped base dimensions
+          state.originalMetadata = {
+            width: img.naturalWidth,
+            height: img.naturalHeight
+          };
+          
+          // Re-sync dimension configurations
+          if (state.targetWidth || state.targetHeight) {
+            const ratio = img.naturalWidth / img.naturalHeight;
+            if (state.aspectRatioLocked) {
+              if (state.targetWidth) {
+                state.targetHeight = Math.round(state.targetWidth / ratio);
+              } else if (state.targetHeight) {
+                state.targetWidth = Math.round(state.targetHeight * ratio);
+              }
+              updateDimensionInputsUI();
+            }
+          }
+          
+          toggleLoading(false);
+          triggerCompression();
+        }, defaultAspect);
+
+      } catch (err) {
+        toggleLoading(false);
+        console.error("Crop loader error:", err);
+        alert("Failed to initialize cropping module.");
+      }
+    });
+  }
+
+  // Aspect Ratio lock checkbox
+  if (pageElements.aspectLock) {
+    pageElements.aspectLock.addEventListener('change', (e) => {
+      state.aspectRatioLocked = e.target.checked;
+    });
+  }
+
+  // Width dimension input override
+  if (pageElements.customWidth) {
+    pageElements.customWidth.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (isNaN(val) || val <= 0) {
+        state.targetWidth = null;
+      } else {
+        state.targetWidth = val;
+        
+        // If aspect locked and we have image loaded, sync Height input
+        if (state.aspectRatioLocked && (state.originalFile || state.croppedFile)) {
+          const ratio = state.originalMetadata.width / state.originalMetadata.height;
+          state.targetHeight = Math.round(val / ratio);
+          if (pageElements.customHeight) {
+            pageElements.customHeight.value = state.targetHeight;
+          }
+        }
+      }
+      triggerCompression();
+    });
+  }
+
+  // Height dimension input override
+  if (pageElements.customHeight) {
+    pageElements.customHeight.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (isNaN(val) || val <= 0) {
+        state.targetHeight = null;
+      } else {
+        state.targetHeight = val;
+        
+        // If aspect locked and we have image loaded, sync Width input
+        if (state.aspectRatioLocked && (state.originalFile || state.croppedFile)) {
+          const ratio = state.originalMetadata.width / state.originalMetadata.height;
+          state.targetWidth = Math.round(val * ratio);
+          if (pageElements.customWidth) {
+            pageElements.customWidth.value = state.targetWidth;
+          }
+        }
+      }
+      triggerCompression();
+    });
+  }
+
   // Preset Controls
-  if (presetSsc) {
-    presetSsc.addEventListener('click', (e) => {
+  if (pageElements.presetSsc) {
+    pageElements.presetSsc.addEventListener('click', (e) => {
       e.stopPropagation();
       navigateTo('/compress-photo-to-exactly-50kb-ssc', syncRouteWithState);
     });
   }
 
-  if (presetUpsc) {
-    presetUpsc.addEventListener('click', (e) => {
+  if (pageElements.presetUpsc) {
+    pageElements.presetUpsc.addEventListener('click', (e) => {
       e.stopPropagation();
       navigateTo('/resize-signature-under-20kb-upsc', syncRouteWithState);
     });
   }
 
-  if (presetCustom) {
-    presetCustom.addEventListener('click', (e) => {
+  if (pageElements.presetCustom) {
+    pageElements.presetCustom.addEventListener('click', (e) => {
       e.stopPropagation();
       navigateTo('/', syncRouteWithState);
     });
   }
 
   // Reset/Clear file
-  if (resetBtn) {
-    resetBtn.addEventListener('click', (e) => {
+  if (pageElements.resetBtn) {
+    pageElements.resetBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       state.originalFile = null;
-      state.compressedBlob = null;
-      if (fileInput) fileInput.value = '';
+      state.croppedFile = null;
+      state.targetWidth = null;
+      state.targetHeight = null;
+      if (pageElements.fileInput) pageElements.fileInput.value = '';
+      updateDimensionInputsUI();
       toggleWorkspaceView(false);
     });
   }
 
   // File Download Trigger
-  if (downloadBtn) {
-    downloadBtn.addEventListener('click', (e) => {
+  if (pageElements.downloadBtn) {
+    pageElements.downloadBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (!state.compressedBlob || !state.originalFile) return;
 
+      const activeFile = state.croppedFile || state.originalFile;
       const extension = state.outputFormat === 'image/png' ? 'png' : 'jpg';
-      const cleanOriginalName = state.originalFile.name.substring(0, state.originalFile.name.lastIndexOf('.')) || state.originalFile.name;
+      const cleanOriginalName = activeFile.name.substring(0, activeFile.name.lastIndexOf('.')) || activeFile.name;
       const downloadName = `${cleanOriginalName}_compressed_${state.targetMaxKB}kb.${extension}`;
 
       const link = document.createElement('a');
@@ -266,9 +439,9 @@ function bindEventListeners() {
     });
   }
 
-  // Intercept nav links clicks to keep Single Page application state
-  const links = ['link-root', 'link-ssc', 'link-upsc'];
-  links.forEach(id => {
+  // Intercept nav links and footer links clicks to keep Single Page application state
+  const navAndFooterLinks = ['link-root', 'link-ssc', 'link-upsc', 'link-neet', 'link-gate', 'link-sbi'];
+  navAndFooterLinks.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       el.addEventListener('click', (e) => {
@@ -281,23 +454,41 @@ function bindEventListeners() {
 }
 
 /**
+ * Configure AdSense IDs at runtime based on CONFIG
+ */
+function setupAdSensePublisher() {
+  const adElements = document.querySelectorAll('ins.adsbygoogle');
+  adElements.forEach(ins => {
+    ins.setAttribute('data-ad-client', CONFIG.adsenseClientId);
+  });
+}
+
+/**
  * Synchronizes Routing events with the central application state
  * @param {Object} routeConfig 
  */
 function syncRouteWithState(routeConfig) {
   state.targetMaxKB = routeConfig.targetMaxKB;
   state.outputFormat = routeConfig.outputType;
+  
+  // Set dimensions overrides if defined in routing presets
+  state.targetWidth = routeConfig.targetWidth || null;
+  state.targetHeight = routeConfig.targetHeight || null;
 
   // Sync inputs & selections UI
   updateTargetKbUI(state.targetMaxKB);
-  const formatSelect = document.getElementById('format-select');
-  if (formatSelect) formatSelect.value = state.outputFormat;
+  updateDimensionInputsUI();
+  
+  if (pageElements.formatSelect) pageElements.formatSelect.value = state.outputFormat;
 
   // Sync preset highlighting
   const currentPath = window.location.pathname;
-  if (currentPath === '/compress-photo-to-exactly-50kb-ssc') {
+  if (currentPath === '/compress-photo-to-exactly-50kb-ssc' || 
+      currentPath === '/compress-photo-under-20kb-gate-exam' || 
+      currentPath === '/sbi-clerk-photo-resizer-under-50kb') {
     state.activePreset = 'ssc';
-  } else if (currentPath === '/resize-signature-under-20kb-upsc') {
+  } else if (currentPath === '/resize-signature-under-20kb-upsc' || 
+             currentPath === '/resize-signature-under-10kb-neet') {
     state.activePreset = 'upsc';
   } else {
     state.activePreset = 'custom';
@@ -316,7 +507,9 @@ function syncRouteWithState(routeConfig) {
 // Bootstrap
 document.addEventListener('DOMContentLoaded', () => {
   cacheDOMElements();
+  cacheLocalElements();
   bindEventListeners();
+  setupAdSensePublisher();
   
   // Initialize Routing & Presets
   initRouter(syncRouteWithState);

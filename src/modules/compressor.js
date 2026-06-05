@@ -32,7 +32,7 @@ export function loadImage(file) {
  * @param {string} outputType - Export mime type ('image/jpeg' or 'image/png').
  * @returns {Promise<{blob: Blob, finalQuality: number, finalBytes: number, width: number, height: number, scaleFactor: number}>}
  */
-export async function processClientImage(nativeFile, targetMaxKB, outputType = 'image/jpeg') {
+export async function processClientImage(nativeFile, targetMaxKB, outputType = 'image/jpeg', targetWidth = null, targetHeight = null) {
   const targetBytes = targetMaxKB * 1024;
   const imgElement = await loadImage(nativeFile);
 
@@ -40,6 +40,24 @@ export async function processClientImage(nativeFile, targetMaxKB, outputType = '
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error("Could not initialize 2D canvas context.");
+  }
+
+  // Calculate base dimensions using target overrides if specified
+  let baseWidth = imgElement.width;
+  let baseHeight = imgElement.height;
+
+  if (targetWidth || targetHeight) {
+    const origRatio = imgElement.width / imgElement.height;
+    if (targetWidth && targetHeight) {
+      baseWidth = targetWidth;
+      baseHeight = targetHeight;
+    } else if (targetWidth) {
+      baseWidth = targetWidth;
+      baseHeight = Math.round(targetWidth / origRatio);
+    } else if (targetHeight) {
+      baseHeight = targetHeight;
+      baseWidth = Math.round(targetHeight * origRatio);
+    }
   }
 
   let scaleFactor = 1.0;
@@ -55,9 +73,9 @@ export async function processClientImage(nativeFile, targetMaxKB, outputType = '
   while (byteFootprint > targetBytes && iterations < maxIterations) {
     iterations++;
     
-    // Calculate new dimensions
-    const width = Math.max(16, Math.floor(imgElement.width * scaleFactor));
-    const height = Math.max(16, Math.floor(imgElement.height * scaleFactor));
+    // Calculate new dimensions based on baseWidth and baseHeight
+    const width = Math.max(16, Math.floor(baseWidth * scaleFactor));
+    const height = Math.max(16, Math.floor(baseHeight * scaleFactor));
     
     canvas.width = width;
     canvas.height = height;

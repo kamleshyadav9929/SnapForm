@@ -84,7 +84,7 @@
             </div>
             
             <div class="mt-4 pt-4 border-t border-white/5 text-xs text-slate-400 space-y-2">
-              <p>📍 Presets auto-configure target file sizes and formats to match recruitment portals constraints.</p>
+              <p>📍 Presets auto-configure target file sizes, aspects, and dimensions to match portal demands.</p>
             </div>
           </div>
 
@@ -148,21 +148,30 @@
               </div>
 
               <!-- Action buttons -->
-              <div class="flex flex-col sm:flex-row gap-3">
-                <button id="download-btn" class="flex-1 h-12 gradient-action-btn flex items-center justify-center gap-2 text-sm font-bold active:scale-95">
+              <div class="flex flex-col gap-3">
+                <button id="download-btn" class="w-full h-12 gradient-action-btn flex items-center justify-center gap-2 text-sm font-bold active:scale-95">
                   <!-- Download Icon -->
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
                   </svg>
                   Download Compressed Image
                 </button>
-                <button id="reset-btn" class="h-12 px-6 rounded-xl border border-white/5 bg-white/2 text-sm font-semibold text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2">
-                  <!-- Reset / Trash Icon -->
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"></path>
-                  </svg>
-                  Clear File
-                </button>
+                <div class="flex gap-3">
+                  <button id="crop-trigger-btn" class="flex-1 h-12 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-sm font-semibold text-cyan-primary hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <!-- Scissors / Crop Icon -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 10h12m0 0V4m0 6l6-6M20 14H8m0 0v6m0-6l-6 6"></path>
+                    </svg>
+                    Crop & Rotate Image
+                  </button>
+                  <button id="reset-btn" class="flex-1 h-12 rounded-xl border border-white/5 bg-white/2 text-sm font-semibold text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <!-- Reset / Trash Icon -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"></path>
+                    </svg>
+                    Clear File
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -225,6 +234,27 @@
                 <span>500 KB</span>
               </div>
             </div>
+
+            <!-- Custom Dimensions Resizing Controls -->
+            <div class="space-y-3 pt-3 border-t border-white/5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Target Dimensions</span>
+                <label class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-400 select-none">
+                  <input type="checkbox" id="aspect-lock" checked class="rounded border-white/15 bg-slate-800 accent-cyan-primary" />
+                  Lock Aspect
+                </label>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                  <label for="custom-width" class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider block">Width (px)</label>
+                  <input type="number" id="custom-width" placeholder="Original" min="16" max="8000" class="w-full h-10 px-3 border border-white/5 bg-slate-800/50 rounded-xl text-slate-200 text-sm focus:border-cyan-primary font-mono" />
+                </div>
+                <div class="space-y-1">
+                  <label for="custom-height" class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider block">Height (px)</label>
+                  <input type="number" id="custom-height" placeholder="Original" min="16" max="8000" class="w-full h-10 px-3 border border-white/5 bg-slate-800/50 rounded-xl text-slate-200 text-sm focus:border-cyan-primary font-mono" />
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Real-Time Metrics Telemetry (frosted panel) -->
@@ -281,9 +311,78 @@
 
       <!-- Page Footer -->
       <footer class="mt-12 text-center text-xs text-slate-600 border-t border-white/5 pt-6 leading-relaxed">
+        <!-- Preset Links for SEO -->
+        <div class="flex flex-wrap justify-center gap-4 mb-4 text-slate-500 font-medium">
+          <a id="link-neet" href="/resize-signature-under-10kb-neet" class="hover:text-cyan-primary transition-colors duration-200">NEET Signature (10KB)</a>
+          <span class="text-white/10">•</span>
+          <a id="link-gate" href="/compress-photo-under-20kb-gate-exam" class="hover:text-cyan-primary transition-colors duration-200">GATE Exam Photo (20KB)</a>
+          <span class="text-white/10">•</span>
+          <a id="link-sbi" href="/sbi-clerk-photo-resizer-under-50kb" class="hover:text-cyan-primary transition-colors duration-200">SBI Clerk Photo (50KB)</a>
+        </div>
         <p>© 2026 SnapForm Local-First Utility Hub. All processes occur locally inside client volatile RAM.</p>
         <p class="mt-1">Zero Cloud Storage. Zero Identity Leaks. Secure, Offline Sandbox environment.</p>
       </footer>
+    </div>
+
+    <!-- Glassmorphic Crop Modal -->
+    <div id="crop-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[100] hidden items-center justify-center p-4">
+      <div class="bento-glass-panel max-w-2xl w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto flex flex-col justify-between border border-white/10">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-white/5 pb-3">
+          <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+            ✂️ Crop & Rotate Image
+          </h3>
+          <span class="text-xs text-slate-500 font-mono">100% Client-Side RAM</span>
+        </div>
+
+        <!-- Cropper Viewport Container -->
+        <div class="relative w-full overflow-hidden bg-slate-900 border border-white/5 rounded-2xl flex items-center justify-center p-1" style="min-height: 300px; max-height: 400px;">
+          <img id="crop-modal-image" class="max-w-full max-h-[380px] block" src="" alt="Cropping viewport" />
+        </div>
+
+        <!-- Controls (Presets + Rotation) -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-3 border-t border-white/5">
+          <!-- Preset locks -->
+          <div class="space-y-2">
+            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Aspect Ratio Preset</span>
+            <div class="flex flex-wrap gap-2">
+              <button id="aspect-free" class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-cyan-primary bg-cyan-500/10 text-cyan-primary transition-all">Freeform</button>
+              <button id="aspect-1-1" class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:border-white/10 transition-all">Square (1:1)</button>
+              <button id="aspect-photo" class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:border-white/10 transition-all">Photo (3.5:4.5)</button>
+              <button id="aspect-sig" class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:border-white/10 transition-all">Signature (3.5:1.1)</button>
+            </div>
+          </div>
+
+          <!-- Rotation buttons -->
+          <div class="space-y-2">
+            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Rotate</span>
+            <div class="flex gap-2">
+              <button id="crop-rotate-left" class="p-2 rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:text-white transition-all" title="Rotate Left 90°">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"></path>
+                </svg>
+              </button>
+              <button id="crop-rotate-right" class="p-2 rounded-lg border border-white/5 bg-white/2 text-slate-400 hover:text-white transition-all" title="Rotate Right 90°">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex gap-3 pt-3 border-t border-white/5">
+          <button id="crop-apply-btn" class="flex-1 h-11 gradient-action-btn text-sm font-bold active:scale-95">
+            Apply Crop settings
+          </button>
+          <button id="crop-cancel-btn" class="h-11 px-6 rounded-xl border border-white/5 bg-white/2 text-sm font-semibold text-slate-400 hover:text-white active:scale-95">
+            Cancel
+          </button>
+        </div>
+
+      </div>
     </div>
 
     <!-- Script loading -->
